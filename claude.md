@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Build an AI-powered email reply agent integrated with Gmail. The system fetches emails from the primary inbox, generates contextual replies using a RAG pipeline grounded in a Supabase vector knowledge base, and presents drafts to the user for review and one-click approval before sending.
+Build an AI-powered email reply agent integrated with Gmail. The system fetches emails live from the Gmail primary inbox, generates contextual replies using a RAG pipeline grounded in a Supabase vector knowledge base, and presents drafts to the user for review and one-click approval before sending.
 
 ---
 
@@ -15,7 +15,7 @@ Build an AI-powered email reply agent integrated with Gmail. The system fetches 
 | Database | **Supabase** (PostgreSQL + pgvector) |
 | Auth | **Google OAuth** (Supabase Auth or NextAuth.js) |
 | Email | **Gmail API** |
-| AI/LLM | **OpenAI** or **Gemini** (confirm with user) |
+| AI/LLM | **Hugging Face** (all-MiniLM-L6-v2 for embeddings), **Gemini** (Gemini 2.5 for reply generation) |
 | Vector Search | **Supabase pgvector** |
 
 ---
@@ -28,8 +28,9 @@ Build an AI-powered email reply agent integrated with Gmail. The system fetches 
 - All routes are protected; redirect unauthenticated users to login.
 
 ### 2. Gmail Inbox Fetching
-- Use Gmail API to fetch emails from the Primary inbox only.
-- Store sender, subject, body, timestamp, and thread ID in Supabase.
+- Use Gmail API to fetch emails from the Primary inbox **live** — no bulk sync or local mirror.
+- Display sender, subject, snippet, and timestamp in the inbox UI.
+- Full email body is fetched on demand when the user selects an email to reply to.
 
 ### 3. RAG Knowledge Base
 - Convert the existing CSV file in the project directory into vector embeddings.
@@ -40,7 +41,7 @@ Build an AI-powered email reply agent integrated with Gmail. The system fetches 
 ### 4. AI Reply Drafting
 - Generate a draft reply using the retrieved context + original email.
 - Display draft in an editable text area for user review.
-- Store the AI draft in Supabase before sending.
+- Store the AI draft in Supabase alongside the email reference before sending.
 
 ### 5. Human Review & One-Click Send
 - **NEVER send automatically.** A human must always approve.
@@ -58,17 +59,15 @@ Build an AI-powered email reply agent integrated with Gmail. The system fetches 
 ## Supabase Schema
 
 ```sql
--- Emails fetched from Gmail
-emails (id, gmail_thread_id, sender, subject, body, received_at, status)
-
--- AI draft and final sent reply
-reply_drafts (id, email_id, ai_draft, final_sent_reply, sent_at, was_modified)
+-- Reply draft with embedded email reference (only created when a reply is drafted)
+-- Emails are fetched live from Gmail API — no bulk inbox mirror.
+reply_drafts (id, gmail_message_id, gmail_thread_id, sender, subject, ai_draft, final_sent_reply, sent_at, was_modified, ai_provider)
 
 -- User feedback per reply
 feedback (id, reply_draft_id, star_rating, text_feedback, created_at)
 
 -- Vectorized knowledge base
-knowledge_chunks (id, content, embedding vector, metadata jsonb, created_at)
+knowledge_chunks (id, content, embedding vector(384), metadata jsonb, created_at)
 ```
 
 ---
@@ -79,9 +78,9 @@ knowledge_chunks (id, content, embedding vector, metadata jsonb, created_at)
 
 1. **Phase 1 — Setup & Auth**: Next.js init, Google OAuth, Supabase tables, Gmail API credentials.
 2. **Phase 2 — Knowledge Base**: Parse CSV, generate embeddings, store in Supabase pgvector.
-3. **Phase 3 — Email Fetching**: Gmail API integration, inbox dashboard UI.
+3. **Phase 3 — Email Fetching**: Gmail API integration to fetch inbox live, on-demand email body retrieval, inbox dashboard UI.
 4. **Phase 4 — RAG & Draft Generation**: Similarity search + LLM prompt + editable draft UI.
-5. **Phase 5 — Review & Send**: One-click send flow, store final reply, update email status.
+5. **Phase 5 — Review & Send**: One-click send flow via Gmail API, store final reply and email reference in Supabase.
 6. **Phase 6 — Feedback & Polish**: Feedback modal, error handling, loading states, UI polish.
 7. **Phase 7 — Deployment**: Frontend to Vercel, backend to Railway, configure env variables.
 
@@ -108,6 +107,6 @@ NEXTAUTH_URL=
 
 1. No autonomous email sending — ever.
 2. Every AI reply must be grounded in the RAG knowledge base.
-3. Store both AI draft and final sent reply in Supabase.
+3. Store both AI draft and final sent reply in Supabase with the email reference.
 4. Execute in phases; confirm preferences with user before each phase.
 5. Single-owner app — no multi-tenancy required.

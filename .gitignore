@@ -1,7 +1,44 @@
+# Dependencies
 node_modules
+
+# Next.js build output
 .next
-.env.local
+
+# Environment variables (CRITICAL — may contain secrets)
 .env
-*.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+server.log
+
+# IDE / editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# API keys / credentials
 keys.txt
 client_secret_*.json
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Next.js auto-generated type declarations
+next-env.d.ts
+
+# Project notes (not source code)
+feedback.txt
+runinsuperbase
+
+# Accidental / orphaned files
+nul
+
+# Project summary (generated)
+PROJECT_SUMMARY.md

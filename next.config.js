@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-    },
-  },
+  // Production builds don't need restricted allowedOrigins
+  // — Vercel handles this automatically
 }
 
 module.exports = nextConfig

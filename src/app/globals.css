@@ -1,6 +1,7 @@
 :root {
   --bg-dark: #0a0a0c;
   --bg-glass: rgba(255, 255, 255, 0.05);
+  --surface-glass: rgba(20, 20, 25, 0.95);
   --border-glass: rgba(255, 255, 255, 0.1);
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
